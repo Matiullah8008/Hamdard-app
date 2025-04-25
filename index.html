@@ -26,7 +26,8 @@
             margin-bottom: 10px; /* Add margin for wrap */
         }
         .header-left img {
-            height: 50px; /* Adjust logo height as needed */
+            height: 80px; /* Increased logo height */
+            width: auto; /* Maintain aspect ratio */
             margin-right: 15px;
         }
         .header-right {
@@ -42,13 +43,10 @@
         .form-section, .table-section {
             margin-bottom: 30px;
         }
-        .message-area {
-            margin-top: 15px;
-        }
         /* Print styles */
         @media print {
             /* Hide elements not needed in print */
-            .print-button, .form-section, .message-area {
+            .print-button, .form-section {
                 display: none !important;
             }
             /* Ensure table borders are visible */
@@ -73,8 +71,8 @@
 
         <div class="header-section">
             <div class="header-left">
-                <img src="https://placehold.co/150x50/e0e0e0/333333?text=Logo" alt="Humdard Committee Logo">
-                <h1 id="mainHeading" class="h4 mb-0">HUMDARD COMMITTEE PAKISTAN MALAYSIA ZONE C</h1>
+                <img src="<img src="hamdard.jpeg" alt="Hamdard Logo">">
+                <h1 id="mainHeading" class="h2 mb-0">HUMDARD COMMITTEE PAKISTAN MALAYSIA ZONE C</h1>
             </div>
             <div class="header-right">
                  <div class="form-group mb-0 mr-3">
@@ -90,9 +88,6 @@
         </div>
 
         <div id="zoneInfo" class="zone-info mb-4">
-            </div>
-
-        <div id="messageArea" class="message-area alert d-none" role="alert">
             </div>
 
 
@@ -153,10 +148,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js"></script>
 
     <script>
-        // JavaScript for dynamic content, form handling, and Google Sheets sync
-
-        // !!! IMPORTANT: Replace with your actual Google Apps Script Web App URL !!!
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyHlm-iKa5121BXvhqQ6osiJbPcfDbt2K2JTyTwU3ce004ExA7WozuE59wvinka8uV5/exec';
+        // JavaScript for dynamic content and form handling (local data only)
 
         // Zone information data
         const zoneData = {
@@ -177,6 +169,9 @@
             }
         };
 
+        // Local storage for member data (in-memory array)
+        let members = []; // Array to hold all member objects
+
         // Get references to DOM elements
         const mainHeading = document.getElementById('mainHeading');
         const zoneSelect = document.getElementById('zoneSelect');
@@ -184,18 +179,6 @@
         const memberForm = document.getElementById('memberForm');
         const memberTableBody = document.getElementById('memberTableBody');
         const printButton = document.getElementById('printButton');
-        const messageArea = document.getElementById('messageArea');
-
-        // Function to display messages (success or error)
-        function showMessage(message, type = 'success') {
-            messageArea.textContent = message;
-            messageArea.className = `message-area alert alert-${type}`;
-            messageArea.classList.remove('d-none');
-            // Hide message after 5 seconds
-            setTimeout(() => {
-                messageArea.classList.add('d-none');
-            }, 5000);
-        }
 
         // Function to update header and zone info based on selected zone
         function updateZoneInfo() {
@@ -209,59 +192,35 @@
             zoneInfoDiv.innerHTML = `
                 ${data.area}, ${data.contactPerson}, TEL: ${data.tel}
             `;
-            // When zone changes, re-fetch data for the selected zone
-            fetchMembersFromSheet(selectedZone);
+
+            // Display members for the selected zone
+            displayMembersForZone(selectedZone);
         }
 
-        // Function to add a single member row to the table
-        function addMemberRowToTable(memberData) {
-            const rowCount = memberTableBody.rows.length + 1;
-            const newRow = memberTableBody.insertRow();
+        // Function to display members for the current zone in the table
+        function displayMembersForZone(zone) {
+            // Clear the current table body
+            memberTableBody.innerHTML = '';
 
-            newRow.insertCell(0).textContent = rowCount; // No
-            newRow.insertCell(1).textContent = memberData.Zone; // Zone
-            newRow.insertCell(2).textContent = memberData.Name; // Name / Current Residence
-            newRow.insertCell(3).textContent = memberData.Passport; // Passport No
-            newRow.insertCell(4).textContent = memberData.Telephone; // Telephone No
-            newRow.insertCell(5).textContent = memberData.Pay; // Pay
-            newRow.insertCell(6).textContent = memberData.Donation; // Donation
+            // Filter members by the selected zone
+            const membersInZone = members.filter(member => member.Zone === zone);
+
+            // Add filtered members to the table
+            membersInZone.forEach((member, index) => {
+                const newRow = memberTableBody.insertRow();
+                newRow.insertCell(0).textContent = index + 1; // Auto-incrementing No
+                newRow.insertCell(1).textContent = member.Zone; // Zone
+                newRow.insertCell(2).textContent = member.Name; // Name / Current Residence
+                newRow.insertCell(3).textContent = member.Passport; // Passport No
+                newRow.insertCell(4).textContent = member.Telephone; // Telephone No
+                newRow.insertCell(5).textContent = member.Pay; // Pay
+                newRow.insertCell(6).textContent = member.Donation; // Donation
+            });
         }
 
-        // Function to fetch data from Google Sheet
-        async function fetchMembersFromSheet(zone) {
-            // The check for the placeholder URL is no longer needed here
-            // as the user has provided the URL.
-
-            try {
-                // Append query parameter for zone to the URL
-                const response = await fetch(`${SCRIPT_URL}?zone=${zone}`);
-                const data = await response.json();
-
-                if (data.status === 'success' && data.data) {
-                    // Clear existing table data before populating
-                     memberTableBody.innerHTML = '';
-                    // Populate the table with fetched data
-                    data.data.forEach(member => {
-                        addMemberRowToTable(member);
-                    });
-                    console.log("Members fetched successfully:", data.data);
-                } else {
-                    console.error("Error fetching data from Google Sheet:", data.message);
-                    showMessage(`Error fetching data: ${data.message}`, 'danger');
-                }
-            } catch (error) {
-                console.error("Network error fetching data:", error);
-                showMessage("Network error while fetching data.", 'danger');
-            }
-        }
-
-
-        // Function to handle form submission and send data to Google Sheet
-        async function handleFormSubmit(event) {
+        // Function to handle form submission and add data to local array
+        function handleFormSubmit(event) {
             event.preventDefault(); // Prevent default form submission
-
-            // The check for the placeholder URL is no longer needed here
-            // as the user has provided the URL.
 
             // Get form input values
             const selectedZone = zoneSelect.value;
@@ -271,8 +230,8 @@
             const payAmount = document.getElementById('payAmount').value;
             const donationAmount = document.getElementById('donationAmount').value;
 
-            // Prepare data object to send
-            const memberData = {
+            // Create member data object
+            const newMember = {
                 Zone: selectedZone,
                 Name: nameResidence,
                 Passport: passportNo,
@@ -281,35 +240,14 @@
                 Donation: donationAmount
             };
 
-            try {
-                // Send data to Google Apps Script using fetch API
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'cors', // Required for cross-origin requests
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(memberData)
-                });
+            // Add the new member to the local array
+            members.push(newMember);
 
-                const result = await response.json();
+            // Clear the form fields
+            memberForm.reset();
 
-                if (result.status === 'success') {
-                    showMessage("Saved to Google Sheets successfully!");
-                    // Add the new member to the table after successful save
-                    // No need to re-fetch all data, just add the new row
-                    addMemberRowToTable(memberData);
-                    // Clear the form fields
-                    memberForm.reset();
-                } else {
-                    console.error("Error saving to Google Sheet:", result.message);
-                    showMessage(`Error saving data: ${result.message}`, 'danger');
-                }
-
-            } catch (error) {
-                console.error("Network error saving data:", error);
-                showMessage("Network error while saving data.", 'danger');
-            }
+            // Redisplay members for the current zone to include the new entry
+            displayMembersForZone(selectedZone);
         }
 
         // Event Listeners
@@ -325,8 +263,8 @@
             window.print(); // Trigger browser print dialog
         });
 
-        // Initialize the page: Set default zone info and fetch data on page load
-        updateZoneInfo(); // This also triggers the initial data fetch
+        // Initialize the page: Set default zone info and display initial members (none)
+        updateZoneInfo();
 
     </script>
 
