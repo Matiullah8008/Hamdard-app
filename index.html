@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Humdard Committee Pakistan Malaysia</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Custom styles */
+        body {
+            padding-top: 20px;
+            padding-bottom: 20px;
+            font-family: sans-serif; /* Ensure a readable font */
+        }
+        .header-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            flex-grow: 1; /* Allow left section to grow */
+            margin-bottom: 10px; /* Add margin for wrap */
+        }
+        .header-left img {
+            height: 50px; /* Adjust logo height as needed */
+            margin-right: 15px;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px; /* Add margin for wrap */
+        }
+        .zone-info {
+            margin-top: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+        .form-section, .table-section {
+            margin-bottom: 30px;
+        }
+        .message-area {
+            margin-top: 15px;
+        }
+        /* Print styles */
+        @media print {
+            /* Hide elements not needed in print */
+            .print-button, .form-section, .message-area {
+                display: none !important;
+            }
+            /* Ensure table borders are visible */
+            table, table tr, table td, table th {
+                border: 1px solid #000 !important;
+            }
+            /* Adjust layout for print if necessary */
+            body {
+                padding: 0;
+                margin: 0;
+            }
+            .container {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+
+        <div class="header-section">
+            <div class="header-left">
+                <img src="https://placehold.co/150x50/e0e0e0/333333?text=Logo" alt="Humdard Committee Logo">
+                <h1 id="mainHeading" class="h4 mb-0">HUMDARD COMMITTEE PAKISTAN MALAYSIA ZONE C</h1>
+            </div>
+            <div class="header-right">
+                 <div class="form-group mb-0 mr-3">
+                    <label for="zoneSelect" class="mr-2 mb-0">Select Zone:</label>
+                    <select class="form-control form-control-sm" id="zoneSelect">
+                        <option value="A">Zone A</option>
+                        <option value="B">Zone B</option>
+                        <option value="C" selected>Zone C</option>
+                    </select>
+                </div>
+                <button id="printButton" class="btn btn-primary btn-sm print-button">Print as PDF</button>
+            </div>
+        </div>
+
+        <div id="zoneInfo" class="zone-info mb-4">
+            </div>
+
+        <div id="messageArea" class="message-area alert d-none" role="alert">
+            </div>
+
+
+        <div class="form-section card p-4">
+            <h2 class="h5 mb-4">Add New Member</h2>
+            <form id="memberForm">
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="nameResidence">Name / Current Residence</label>
+                        <input type="text" class="form-control" id="nameResidence" required>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="passportNo">Passport No</label>
+                        <input type="text" class="form-control" id="passportNo" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label for="telephoneNo">Telephone No</label>
+                        <input type="tel" class="form-control" id="telephoneNo" required>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="payAmount">Pay</label>
+                        <input type="number" class="form-control" id="payAmount" required min="0">
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="donationAmount">Donation</label>
+                        <input type="number" class="form-control" id="donationAmount" required min="0">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-success" id="addMemberButton">Add Member</button>
+            </form>
+        </div>
+
+        <div class="table-section">
+            <h2 class="h5 mb-4">Member List</h2>
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered">
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>Zone</th>
+                            <th>Name / Current Residence</th>
+                            <th>Passport No</th>
+                            <th>Telephone No</th>
+                            <th>Pay</th>
+                            <th>Donation</th>
+                        </tr>
+                    </thead>
+                    <tbody id="memberTableBody">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div> <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js"></script>
+
+    <script>
+        // JavaScript for dynamic content, form handling, and Google Sheets sync
+
+        // !!! IMPORTANT: Replace with your actual Google Apps Script Web App URL !!!
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzNJh5rwzRW4YFdPIov2sl-Ozy2akxUTpzV5C0Zhk58TjZ9P0hH2_kV4IHIB882xpWC/exec';
+
+        // Zone information data
+        const zoneData = {
+            A: {
+                area: "MEMBERS AREA SHAH ALAM SECTION 27",
+                contactPerson: "Mr. Adnan Qarar",
+                tel: "03150629018"
+            },
+            B: {
+                area: "MEMBERS AREA KUALA LUMPUR 03",
+                contactPerson: "Mr. Asif Rehman",
+                tel: "01161260057"
+            },
+            C: {
+                area: "MEMBERS AREA PUCHOONG 01",
+                contactPerson: "Mr. Bakhti Jaan",
+                tel: "0149263819"
+            }
+        };
+
+        // Get references to DOM elements
+        const mainHeading = document.getElementById('mainHeading');
+        const zoneSelect = document.getElementById('zoneSelect');
+        const zoneInfoDiv = document.getElementById('zoneInfo');
+        const memberForm = document.getElementById('memberForm');
+        const memberTableBody = document.getElementById('memberTableBody');
+        const printButton = document.getElementById('printButton');
+        const messageArea = document.getElementById('messageArea');
+
+        // Function to display messages (success or error)
+        function showMessage(message, type = 'success') {
+            messageArea.textContent = message;
+            messageArea.className = `message-area alert alert-${type}`;
+            messageArea.classList.remove('d-none');
+            // Hide message after 5 seconds
+            setTimeout(() => {
+                messageArea.classList.add('d-none');
+            }, 5000);
+        }
+
+        // Function to update header and zone info based on selected zone
+        function updateZoneInfo() {
+            const selectedZone = zoneSelect.value;
+            const data = zoneData[selectedZone];
+
+            // Update main heading
+            mainHeading.textContent = `HUMDARD COMMITTEE PAKISTAN MALAYSIA ZONE ${selectedZone}`;
+
+            // Update dynamic zone info
+            zoneInfoDiv.innerHTML = `
+                ${data.area}, ${data.contactPerson}, TEL: ${data.tel}
+            `;
+            // When zone changes, re-fetch data for the selected zone
+            fetchMembersFromSheet(selectedZone);
+        }
+
+        // Function to add a single member row to the table
+        function addMemberRowToTable(memberData) {
+            const rowCount = memberTableBody.rows.length + 1;
+            const newRow = memberTableBody.insertRow();
+
+            newRow.insertCell(0).textContent = rowCount; // No
+            newRow.insertCell(1).textContent = memberData.Zone; // Zone
+            newRow.insertCell(2).textContent = memberData.Name; // Name / Current Residence
+            newRow.insertCell(3).textContent = memberData.Passport; // Passport No
+            newRow.insertCell(4).textContent = memberData.Telephone; // Telephone No
+            newRow.insertCell(5).textContent = memberData.Pay; // Pay
+            newRow.insertCell(6).textContent = memberData.Donation; // Donation
+        }
+
+        // Function to fetch data from Google Sheet
+        async function fetchMembersFromSheet(zone) {
+            if (SCRIPT_URL === 'YOUR_APPS_SCRIPT_WEB_APP_URL_HERE') {
+                console.error("Google Apps Script URL is not set.");
+                showMessage("Error: Google Apps Script URL is not configured.", 'danger');
+                return;
+            }
+
+            // Clear existing table data before fetching
+            memberTableBody.innerHTML = '';
+
+            try {
+                // Append query parameter for zone to the URL
+                const response = await fetch(`${SCRIPT_URL}?zone=${zone}`);
+                const data = await response.json();
+
+                if (data.status === 'success' && data.data) {
+                    // Populate the table with fetched data
+                    data.data.forEach(member => {
+                        addMemberRowToTable(member);
+                    });
+                    console.log("Members fetched successfully:", data.data);
+                } else {
+                    console.error("Error fetching data from Google Sheet:", data.message);
+                    showMessage(`Error fetching data: ${data.message}`, 'danger');
+                }
+            } catch (error) {
+                console.error("Network error fetching data:", error);
+                showMessage("Network error while fetching data.", 'danger');
+            }
+        }
+
+
+        // Function to handle form submission and send data to Google Sheet
+        async function handleFormSubmit(event) {
+            event.preventDefault(); // Prevent default form submission
+
+             if (SCRIPT_URL === 'YOUR_APPS_SCRIPT_WEB_APP_URL_HERE') {
+                console.error("Google Apps Script URL is not set.");
+                showMessage("Error: Google Apps Script URL is not configured.", 'danger');
+                return;
+            }
+
+            // Get form input values
+            const selectedZone = zoneSelect.value;
+            const nameResidence = document.getElementById('nameResidence').value;
+            const passportNo = document.getElementById('passportNo').value;
+            const telephoneNo = document.getElementById('telephoneNo').value;
+            const payAmount = document.getElementById('payAmount').value;
+            const donationAmount = document.getElementById('donationAmount').value;
+
+            // Prepare data object to send
+            const memberData = {
+                Zone: selectedZone,
+                Name: nameResidence,
+                Passport: passportNo,
+                Telephone: telephoneNo,
+                Pay: payAmount,
+                Donation: donationAmount
+            };
+
+            try {
+                // Send data to Google Apps Script using fetch API
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'cors', // Required for cross-origin requests
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(memberData)
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    showMessage("Saved to Google Sheets successfully!");
+                    // Add the new member to the table after successful save
+                    addMemberRowToTable(memberData);
+                    // Clear the form fields
+                    memberForm.reset();
+                } else {
+                    console.error("Error saving to Google Sheet:", result.message);
+                    showMessage(`Error saving data: ${result.message}`, 'danger');
+                }
+
+            } catch (error) {
+                console.error("Network error saving data:", error);
+                showMessage("Network error while saving data.", 'danger');
+            }
+        }
+
+        // Event Listeners
+
+        // Listen for changes on the zone dropdown
+        zoneSelect.addEventListener('change', updateZoneInfo);
+
+        // Listen for form submission
+        memberForm.addEventListener('submit', handleFormSubmit);
+
+        // Listen for click on the print button
+        printButton.addEventListener('click', () => {
+            window.print(); // Trigger browser print dialog
+        });
+
+        // Initialize the page: Set default zone info and fetch data on page load
+        updateZoneInfo(); // This also triggers the initial data fetch
+
+    </script>
+
+</body>
+</html>
