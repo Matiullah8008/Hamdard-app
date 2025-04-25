@@ -229,14 +229,8 @@
 
         // Function to fetch data from Google Sheet
         async function fetchMembersFromSheet(zone) {
-            if (SCRIPT_URL === 'YOUR_APPS_SCRIPT_WEB_APP_URL_HERE') {
-                console.error("Google Apps Script URL is not set.");
-                showMessage("Error: Google Apps Script URL is not configured.", 'danger');
-                return;
-            }
-
-            // Clear existing table data before fetching
-            memberTableBody.innerHTML = '';
+            // The check for the placeholder URL is no longer needed here
+            // as the user has provided the URL.
 
             try {
                 // Append query parameter for zone to the URL
@@ -244,6 +238,8 @@
                 const data = await response.json();
 
                 if (data.status === 'success' && data.data) {
+                    // Clear existing table data before populating
+                     memberTableBody.innerHTML = '';
                     // Populate the table with fetched data
                     data.data.forEach(member => {
                         addMemberRowToTable(member);
@@ -264,11 +260,8 @@
         async function handleFormSubmit(event) {
             event.preventDefault(); // Prevent default form submission
 
-             if (SCRIPT_URL === 'YOUR_APPS_SCRIPT_WEB_APP_URL_HERE') {
-                console.error("Google Apps Script URL is not set.");
-                showMessage("Error: Google Apps Script URL is not configured.", 'danger');
-                return;
-            }
+            // The check for the placeholder URL is no longer needed here
+            // as the user has provided the URL.
 
             // Get form input values
             const selectedZone = zoneSelect.value;
@@ -304,6 +297,7 @@
                 if (result.status === 'success') {
                     showMessage("Saved to Google Sheets successfully!");
                     // Add the new member to the table after successful save
+                    // No need to re-fetch all data, just add the new row
                     addMemberRowToTable(memberData);
                     // Clear the form fields
                     memberForm.reset();
